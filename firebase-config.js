@@ -8,13 +8,15 @@
 // fall back to a LOCAL demo mode (BroadcastChannel + localStorage) so you can
 // test the two pages on the same machine without any Firebase setup.
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "your-app.firebaseapp.com",
-  databaseURL: "https://your-app-default-rtdb.firebaseio.com",
-  projectId: "your-app",
-  storageBucket: "your-app.appspot.com",
-  messagingSenderId: "YOUR_SENDER_ID",
-  appId: "YOUR_APP_ID"
+  apiKey: "AIzaSyDNiIS3YlXIoTVFxEWt6f78awEyLwJ3tUI",
+  authDomain: "mayimtech-dc978.firebaseapp.com",
+  databaseURL:
+    "https://mayimtech-dc978-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "mayimtech-dc978",
+  storageBucket: "mayimtech-dc978.firebasestorage.app",
+  messagingSenderId: "601240135362",
+  appId: "1:601240135362:web:61f64c68d0f25571eabd5b",
+  measurementId: "G-NZEZLNWHFN",
 };
 
 // True only when real keys have been pasted in (not the placeholders).

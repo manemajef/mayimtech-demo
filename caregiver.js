@@ -19,10 +19,13 @@ var seenAlerts = {}; // dedupe alert count/chime by timestamp
 var seenEvents = {}; // dedupe history/trend by timestamp
 var trend = []; // recent readings for the chart
 var lastAckAt = null; // dedupe patient acknowledgments
+var ingestedEvents = []; // stores all unique processed readings and acknowledgments
 
 var el = {
   conn: document.getElementById("conn"),
   connText: document.getElementById("connText"),
+  devBar: document.getElementById("devBar"),
+  devClear: document.getElementById("devClear"),
   patientCard: document.getElementById("patientCard"),
   statusIcon: document.getElementById("statusIcon"),
   banner: document.getElementById("alertBanner"),
@@ -39,6 +42,8 @@ var el = {
   lastUpdate: document.getElementById("lastUpdate"),
   alertsCount: document.getElementById("alertsCount"),
   history: document.getElementById("history"),
+  historyEmpty: document.getElementById("historyEmpty"),
+  historyMore: document.getElementById("historyMore"),
   chart: document.getElementById("chart"),
 };
 
@@ -48,6 +53,15 @@ function statusClass(s) {
     : s === "Warning"
       ? "is-warning"
       : "is-normal";
+}
+
+function formatTime(value) {
+  return new Date(value).toLocaleTimeString("en-GB", {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: false,
+  });
 }
 
 // per-vital color level: green (ok) / amber (warn) / red (crit)
@@ -80,6 +94,7 @@ function connect() {
             return new Date(a.timestamp) - new Date(b.timestamp);
           })
           .forEach(ingest);
+        rebuildUI();
         drawChart();
       });
 
@@ -108,8 +123,111 @@ function connect() {
     log.slice(-10).forEach(ingest);
     var stored = localStorage.getItem("mayimtech-current");
     if (stored) onReading(JSON.parse(stored));
+    rebuildUI();
   }
   drawChart();
+}
+
+// ---- hidden demo rescue controls ----
+// Right-click the connection indicator or double-click its dot to toggle.
+function toggleDevMode(e) {
+  if (e) e.preventDefault();
+  el.devBar.hidden = !el.devBar.hidden;
+}
+
+el.conn.addEventListener("contextmenu", toggleDevMode);
+el.conn.querySelector(".dot").addEventListener("dblclick", toggleDevMode);
+
+document.querySelectorAll("[data-dev-status]").forEach(function (button) {
+  button.addEventListener("click", function () {
+    devReading(button.getAttribute("data-dev-status"));
+  });
+});
+
+el.devClear.addEventListener("click", clearDashboardHistory);
+
+function devReading(status) {
+  var values =
+    status === "critical"
+      ? { pulse: 118, temperature: 38.6, movement: 18, forced: true }
+      : status === "warning"
+        ? { pulse: 95, temperature: 37.6, movement: 36, forced: false }
+        : { pulse: 74, temperature: 36.7, movement: 68, forced: false };
+  var label =
+    status === "critical"
+      ? "Critical"
+      : status === "warning"
+        ? "Warning"
+        : "Normal";
+  var reasons =
+    label === "Critical"
+      ? ["high pulse", "high temperature", "very low movement"]
+      : label === "Warning"
+        ? ["slightly high pulse", "slightly high temperature", "low movement"]
+        : [];
+  onReading({
+    pulse: values.pulse,
+    temperature: values.temperature,
+    movement: values.movement,
+    forced: values.forced,
+    status: label,
+    reasons: reasons,
+    alert: label !== "Normal",
+    patientId: PATIENT_ID,
+    patientName: "Miriam Cohen",
+    timestamp: new Date().toISOString(),
+    id: "dev-" + Date.now() + "-" + Math.random().toString(36).slice(2, 7),
+  });
+}
+
+function clearDashboardHistory() {
+  trend = [];
+  ingestedEvents = [];
+  seenEvents = {};
+  seenAlerts = {};
+  alertsToday = 0;
+  el.alertsCount.textContent = "0";
+  el.history.replaceChildren();
+  if (!db) {
+    localStorage.removeItem("mayimtech-events");
+    localStorage.removeItem("mayimtech-current");
+  }
+  el.history.classList.remove("is-expanded");
+  resetCurrentReading();
+  updateHistoryControls();
+  drawChart();
+}
+
+function resetCurrentReading() {
+  el.pulse.textContent = "–";
+  el.temp.textContent = "–";
+  el.move.textContent = "–";
+  [el.vPulse, el.vTemp, el.vMove].forEach(function (vital) {
+    vital.classList.remove("ok", "warn", "crit");
+  });
+  el.badge.textContent = "Waiting";
+  el.badge.className = "badge";
+  el.lastUpdate.textContent = "—";
+  el.statusIcon.textContent = "";
+  el.ackNote.hidden = true;
+  el.patientCard.className = "card patient-card is-normal";
+}
+
+el.historyMore.addEventListener("click", function () {
+  var expanded = el.history.classList.toggle("is-expanded");
+  el.historyMore.textContent = expanded ? "Show less" : "Show more";
+});
+
+function updateHistoryControls() {
+  var hasMoreThanSix = el.history.children.length > 6;
+  var hasEvents = el.history.children.length > 0;
+  el.historyEmpty.hidden = hasEvents;
+  el.patientCard.classList.toggle("has-history", hasEvents);
+  el.historyMore.hidden = !hasMoreThanSix;
+  if (!hasMoreThanSix) {
+    el.history.classList.remove("is-expanded");
+    el.historyMore.textContent = "Show more";
+  }
 }
 
 function onReading(r) {
@@ -135,27 +253,34 @@ function onReading(r) {
 
   el.badge.textContent = r.status;
   el.badge.className = "badge " + statusClass(r.status);
-  el.lastUpdate.textContent = new Date(r.timestamp).toLocaleTimeString();
+  el.lastUpdate.textContent = formatTime(r.timestamp);
   el.ackNote.hidden = true; // a fresh reading supersedes an earlier acknowledgment
 
-  // the whole patient card reacts to status (border + pulse via CSS)
-  el.patientCard.className = "card patient-card " + statusClass(r.status);
+  // The whole patient card reacts to status (border + pulse via CSS)
+  // FIX FOR BUG: Do NOT overwrite el.patientCard.className which wipes out has-history!
+  // Instead, toggle status classes using classList.
+  el.patientCard.classList.remove("is-normal", "is-warning", "is-critical", "is-acknowledged");
+  el.patientCard.classList.add(statusClass(r.status));
+
   if (r.status === "Normal") {
     el.statusIcon.textContent = "";
   } else {
     el.statusIcon.textContent = r.status === "Critical" ? "❗" : "⚠️";
-    var reasons =
-      r.reasons && r.reasons.length
-        ? r.reasons.join(", ")
-        : "abnormal readings";
+    var affected = [];
+    if (r.pulse >= TH.pulseWarn) affected.push("Pulse");
+    if (Number(r.temperature) >= TH.tempWarn) affected.push("Temperature");
+    if (r.movement <= TH.moveWarn) affected.push("Movement");
     el.alertTitle.textContent =
       r.status === "Critical"
         ? "CRITICAL — dehydration risk"
         : "Warning — check patient";
-    el.alertBody.textContent = reasons;
+    el.alertBody.textContent = affected.length
+      ? "Outside expected range: " + affected.join(", ") + "."
+      : "Manual emergency alert.";
   }
 
   ingest(r);
+  rebuildUI();
   drawChart();
 
   // sound a chime once per distinct critical reading (ingest handles the count)
@@ -168,20 +293,23 @@ function onReading(r) {
 
 // patient tapped "I drank and feel better" on a warning
 function showAck(a) {
-  var t = new Date(a.at || Date.now()).toLocaleTimeString();
+  var t = formatTime(a.at || Date.now());
   el.ackNote.hidden = false;
-  el.ackNote.textContent =
-    "✓ Miriam Cohen saw the warning and drank water · " + t;
-  var row = document.createElement("div");
-  row.className = "event is-normal";
-  row.innerHTML =
-    "<span><b>Acknowledged</b> · patient drank water</span>" +
-    "<span class='e-time'>" +
-    t +
-    "</span>";
-  el.history.insertBefore(row, el.history.firstChild);
-  while (el.history.children.length > 10)
-    el.history.removeChild(el.history.lastChild);
+  el.ackNote.innerHTML =
+    '<span class="ack-title">Acknowledged</span>' +
+    '<span class="ack-body">Miriam Cohen saw the warning and drank water · ' + t + '</span>';
+  el.patientCard.classList.add("is-acknowledged");
+  
+  var ackId = "ack-" + (a.at || Date.now());
+  if (!seenEvents[ackId]) {
+    seenEvents[ackId] = true;
+    ingestedEvents.push({
+      id: ackId,
+      timestamp: new Date(a.at || Date.now()).toISOString(),
+      isAck: true
+    });
+    rebuildUI();
+  }
 }
 
 // add a reading to the chart + history exactly once (deduped by reading id).
@@ -190,43 +318,73 @@ function ingest(r) {
   var id = r.id || r.timestamp;
   if (seenEvents[id]) return;
   seenEvents[id] = true;
-  pushTrend(r);
-  addEvent(r);
+  ingestedEvents.push(r);
   if (r.alert) {
     alertsToday += 1;
     el.alertsCount.textContent = alertsToday;
   }
 }
 
-function pushTrend(r) {
-  trend.push({
-    pulse: Number(r.pulse),
-    temp: Number(r.temperature),
-    time: new Date(r.timestamp),
+function rebuildUI() {
+  // Sort chronologically (oldest first)
+  ingestedEvents.sort(function (a, b) {
+    return new Date(a.timestamp) - new Date(b.timestamp);
   });
-  while (trend.length > 15) trend.shift();
-}
 
-function addEvent(r) {
-  var row = document.createElement("div");
-  row.className = "event " + statusClass(r.status);
-  var t = new Date(r.timestamp).toLocaleTimeString();
-  row.innerHTML =
-    "<span><b>" +
-    r.status +
-    "</b> · pulse " +
-    r.pulse +
-    " · " +
-    Number(r.temperature).toFixed(1) +
-    "°C · move " +
-    r.movement +
-    "%</span>" +
-    "<span class='e-time'>" +
-    t +
-    "</span>";
-  el.history.insertBefore(row, el.history.firstChild);
-  while (el.history.children.length > 10)
-    el.history.removeChild(el.history.lastChild);
+  // Limit local list size to prevent memory bloat
+  if (ingestedEvents.length > 50) {
+    ingestedEvents = ingestedEvents.slice(-50);
+  }
+
+  // Build trend array (only non-acknowledgment readings, last 15 items)
+  var readingsOnly = ingestedEvents.filter(function (r) {
+    return !r.isAck;
+  });
+  
+  trend = readingsOnly.slice(-15).map(function (r) {
+    return {
+      pulse: Number(r.pulse),
+      temp: Number(r.temperature),
+      movement: Number(r.movement),
+      time: new Date(r.timestamp),
+    };
+  });
+
+  // Re-render history list
+  el.history.innerHTML = "";
+  
+  var historyItems = ingestedEvents.slice(-20); // render up to last 20 for expansion
+  
+  for (var i = historyItems.length - 1; i >= 0; i--) {
+    var r = historyItems[i];
+    var row = document.createElement("div");
+    if (r.isAck) {
+      row.className = "event is-normal";
+      row.innerHTML =
+        "<span><b>Acknowledged</b> · patient drank water</span>" +
+        "<span class='e-time'>" +
+        formatTime(r.timestamp) +
+        "</span>";
+    } else {
+      row.className = "event " + statusClass(r.status);
+      row.innerHTML =
+        "<span><b>" +
+        r.status +
+        "</b> · pulse " +
+        r.pulse +
+        " · " +
+        Number(r.temperature).toFixed(1) +
+        "°C · move " +
+        r.movement +
+        "%</span>" +
+        "<span class='e-time'>" +
+        formatTime(r.timestamp) +
+        "</span>";
+    }
+    el.history.appendChild(row);
+  }
+  
+  updateHistoryControls();
 }
 
 // ---- audible alert (synthesized, no external asset) ----
@@ -267,12 +425,20 @@ document.body.addEventListener("click", function unlock() {
   document.body.removeEventListener("click", unlock);
 });
 
-// ---- minimal line chart (pulse + temperature) ----
+// ---- minimal line chart (pulse + temperature + movement) ----
 function drawChart() {
   var c = el.chart,
     ctx = c.getContext("2d");
-  var w = c.width,
-    h = c.height,
+  var rect = c.getBoundingClientRect();
+  var dpr = Math.min(window.devicePixelRatio || 1, 2);
+  var w = Math.max(280, Math.round(rect.width));
+  var h = Math.max(180, Math.round(rect.height));
+  if (c.width !== Math.round(w * dpr) || c.height !== Math.round(h * dpr)) {
+    c.width = Math.round(w * dpr);
+    c.height = Math.round(h * dpr);
+  }
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  var
     pad = 22;
   ctx.clearRect(0, 0, w, h);
   ctx.strokeStyle = "#e2e7ec";
@@ -314,7 +480,28 @@ function drawChart() {
     h,
     pad,
   );
+  line(
+    ctx,
+    trend.map(function (v) {
+      return v.movement;
+    }),
+    0,
+    100,
+    "#6f42c1",
+    w,
+    h,
+    pad,
+  );
   legend(ctx);
+}
+
+if (window.ResizeObserver) {
+  var chartObserver = new ResizeObserver(function () {
+    drawChart();
+  });
+  chartObserver.observe(el.chart);
+} else {
+  window.addEventListener("resize", drawChart);
 }
 
 function line(ctx, vals, min, max, color, w, h, pad) {
@@ -336,11 +523,12 @@ function line(ctx, vals, min, max, color, w, h, pad) {
 function legend(ctx) {
   var items = [
     ["Pulse", "#b3161c"],
-    ["Temp", "#1a56c4"],
+    ["Temperature", "#1a56c4"],
+    ["Movement", "#6f42c1"],
   ];
   ctx.font = "12px sans-serif";
   items.forEach(function (it, i) {
-    var x = 26 + i * 74;
+    var x = 26 + i * 112;
     ctx.fillStyle = it[1];
     ctx.fillRect(x, 6, 10, 10);
     ctx.fillStyle = "#16202b";

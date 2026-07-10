@@ -127,15 +127,16 @@ function render(reading) {
     // softer + smaller: a gentle nudge, not an alarm
     el.icon.style.display = "";
     el.icon.textContent = "⚠️";
-    el.head.textContent = "Please drink water and take some rest.";
-    el.sub.style.display = "none";
+    el.head.textContent = "Hydration warning";
+    el.sub.textContent = "Please drink some water and take a short rest.";
+    el.sub.style.display = "";
     el.ackBtn.hidden = false; // patient can acknowledge
   } else {
     // Critical: bigger + stricter, no self-dismiss
     el.icon.style.display = "";
     el.icon.textContent = "❗";
-    el.head.textContent = "Drink water now.";
-    el.sub.textContent = "Your caregiver has been alerted.";
+    el.head.textContent = "Urgent hydration alert";
+    el.sub.textContent = "Please drink water now. Your caregiver has been alerted.";
     el.sub.style.display = "";
   }
 }
@@ -144,7 +145,9 @@ function render(reading) {
 // pulse stops, and the caregiver is notified.
 el.ackBtn.addEventListener("click", function () {
   el.panel.classList.add("acked");
-  el.head.textContent = "Noted — keep drinking water and rest.";
+  el.head.textContent = "Good — keep sipping water.";
+  el.sub.textContent = "Your caregiver has been updated.";
+  el.sub.style.display = "";
   el.ackBtn.hidden = true;
   publishAck();
 });
@@ -241,4 +244,20 @@ document.getElementById("autoToggle").addEventListener("change", function (e) {
 });
 
 connect();
-send("normal");
+if (db) {
+  db.ref("mayimtech/" + PATIENT_ID + "/current").once("value", function (snap) {
+    var val = snap.val();
+    if (val) {
+      render(val);
+    } else {
+      send("normal");
+    }
+  });
+} else {
+  var stored = localStorage.getItem("mayimtech-current");
+  if (stored) {
+    render(JSON.parse(stored));
+  } else {
+    send("normal");
+  }
+}

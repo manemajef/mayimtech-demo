@@ -8,15 +8,25 @@
   </head>
   <body class="caregiver">
     <div class="topbar">
-      <div>
-        <h1>MAYIMTECH</h1>
-        <div class="sub">
-          Caregiver Dashboard · real-time dehydration monitoring
-        </div>
-      </div>
+      <div class="brand">MAYIMTECH</div>
       <div class="conn" id="conn">
         <span class="dot"></span><span id="connText">Connecting…</span>
       </div>
+    </div>
+
+    <div class="dev-bar" id="devBar" hidden>
+      <span class="dev-label">Demo rescue controls</span>
+      <div class="dev-actions">
+        <button type="button" data-dev-status="normal">Normal</button>
+        <button type="button" data-dev-status="warning">Warning</button>
+        <button type="button" data-dev-status="critical">Critical</button>
+        <button type="button" id="devClear">Clear history</button>
+      </div>
+    </div>
+
+    <div class="patients-heading">
+      <h1>Patient monitoring dashboard</h1>
+      <span class="patient-count">1 active</span>
     </div>
 
     <!-- ONE patient card. Its border reacts to status (warning = icon pulses, critical = whole card pulses) -->
@@ -26,65 +36,93 @@
           <span class="status-icon" id="statusIcon" aria-hidden="true"></span>
           <div>
             <div class="p-name">Miriam Cohen</div>
-            <div class="p-id">Patient ID: MT-001 · Home care</div>
           </div>
         </div>
         <div class="badge is-normal" id="badge">Waiting</div>
       </div>
 
-      <!-- alert line (names the readings that crossed threshold) -->
-      <div class="alert-line" id="alertBanner">
-        <b class="a-title" id="alertTitle">Dehydration risk</b>
-        <span class="a-body" id="alertBody"></span>
-      </div>
-
-      <!-- shown when the patient acknowledges a warning -->
-      <div class="ack-note" id="ackNote" hidden></div>
-
       <div class="cg-body">
         <div class="cg-left">
-          <div class="vitals">
+          <div class="vitals" style="padding-top: 1em">
             <div class="vital" id="vPulse">
-              <div class="v-label">Pulse</div>
+              <div class="v-label">
+                <svg class="v-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M3 12h4l2-5 4 10 2-5h6" />
+                </svg>
+                Pulse
+              </div>
               <div class="v-value">
                 <span id="pulse">–</span> <span class="unit">bpm</span>
               </div>
             </div>
             <div class="vital" id="vTemp">
-              <div class="v-label">Temperature</div>
+              <div class="v-label">
+                <svg class="v-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M10 14.8V5a2 2 0 0 1 4 0v9.8a4 4 0 1 1-4 0Z" />
+                  <path d="M12 8v8" />
+                </svg>
+                Temperature
+              </div>
               <div class="v-value">
                 <span id="temp">–</span> <span class="unit">°C</span>
               </div>
             </div>
             <div class="vital" id="vMove">
-              <div class="v-label">Movement</div>
+              <div class="v-label">
+                <svg class="v-icon" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="13" cy="4" r="2" />
+                  <path d="m10 22 1-6-3-3 2-6 4 3 4 1" />
+                  <path d="m15 22-2-6 2-3" />
+                </svg>
+                Movement
+              </div>
               <div class="v-value">
                 <span id="move">–</span> <span class="unit">%</span>
               </div>
             </div>
           </div>
 
-          <div class="meta-row">
-            <span>Last reading: <b id="lastUpdate">—</b></span>
-            <span>Alerts today: <b id="alertsCount">0</b></span>
+          <div class="status-banner-wrap">
+            <!-- compact context for the readings that crossed threshold -->
+            <div class="alert-line" id="alertBanner">
+              <b class="a-title" id="alertTitle">Dehydration risk</b>
+              <span class="a-body" id="alertBody"></span>
+            </div>
+
+            <!-- replaces the alert context when the patient acknowledges -->
+            <div class="ack-note" id="ackNote" hidden></div>
           </div>
 
-          <div class="section-title">Recent readings</div>
+          <div class="chart-heading">
+            <div class="section-title">Recent readings</div>
+            <span class="last-reading"
+              >Last reading: <b id="lastUpdate">—</b></span
+            >
+          </div>
           <div class="chart-wrap">
             <canvas id="chart" width="560" height="200"></canvas>
           </div>
         </div>
 
         <div class="cg-right">
-          <div class="section-title">Event history</div>
+          <div class="history-heading">
+            <div class="section-title">Event history</div>
+            <span class="alerts-total"
+              >Risk alerts today: <b id="alertsCount">0</b></span
+            >
+          </div>
+          <div class="history-empty" id="historyEmpty">
+            No events yet. Waiting for patient readings…
+          </div>
+
           <div class="history" id="history"></div>
+          <button class="history-more" id="historyMore" type="button" hidden>
+            Show more
+          </button>
         </div>
       </div>
-    </div>
 
-    <div class="foot-note">
-      Laptop dashboard · projected in class. Alerts appear within 5 seconds of a
-      patient reading.
+      <div class="patient-foot">Patient ID: MT-001 · Home care</div>
     </div>
 
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>

@@ -25,25 +25,43 @@
       <div class="status-sub" id="statusSub">
         Your caregiver has been notified.
       </div>
-      <button class="cta" id="ackBtn" hidden>I drank and feel better</button>
+      <button class="cta" id="ackBtn" hidden>I've had some water</button>
     </section>
 
     <!-- Current readings -->
     <section class="readings">
       <div class="reading" id="rPulse">
-        <span class="r-label">Pulse</span>
+        <span class="r-label">
+          <svg class="r-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M3 12h4l2-5 4 10 2-5h6" />
+          </svg>
+          Pulse
+        </span>
         <span class="r-value"
           ><span id="pulse">–</span> <span class="unit">bpm</span></span
         >
       </div>
       <div class="reading" id="rTemp">
-        <span class="r-label">Temperature</span>
+        <span class="r-label">
+          <svg class="r-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <path d="M10 14.8V5a2 2 0 0 1 4 0v9.8a4 4 0 1 1-4 0Z" />
+            <path d="M12 8v8" />
+          </svg>
+          Temperature
+        </span>
         <span class="r-value"
           ><span id="temp">–</span> <span class="unit">°C</span></span
         >
       </div>
       <div class="reading" id="rMove">
-        <span class="r-label">Movement</span>
+        <span class="r-label">
+          <svg class="r-icon" viewBox="0 0 24 24" aria-hidden="true">
+            <circle cx="13" cy="4" r="2" />
+            <path d="m10 22 1-6-3-3 2-6 4 3 4 1" />
+            <path d="m15 22-2-6 2-3" />
+          </svg>
+          Movement
+        </span>
         <span class="r-value"
           ><span id="move">–</span> <span class="unit">%</span></span
         >
@@ -51,21 +69,23 @@
     </section>
 
     <!-- Demo controls (for the presenter). The wristband would send these automatically. -->
-    <div class="controls-title">Demo controls</div>
+    <section class="demo-controls" aria-labelledby="demoControlsTitle">
+      <div class="controls-title" id="demoControlsTitle">Demo controls</div>
 
-    <div class="auto-row">
-      <span class="a-label">Auto mode (send every 3s)</span>
-      <label class="toggle"
-        ><input type="checkbox" id="autoToggle" /><span class="track"></span
-      ></label>
-    </div>
-    <div>Force push stats (for demo)</div>
+      <div class="push-label">Send a reading</div>
+      <div class="demo-actions">
+        <button class="btn normal" id="btnNormal">Normal</button>
+        <button class="btn high" id="btnHigh">Watch out</button>
+        <button class="btn alert" id="btnAlert">Critical</button>
+      </div>
 
-    <div style="display: flex; gap: 1em">
-      <button class="btn normal" id="btnNormal">Normal</button>
-      <button class="btn high" id="btnHigh">Watch out</button>
-      <button class="btn alert" id="btnAlert">Critical</button>
-    </div>
+      <div class="auto-row">
+        <span class="a-label">Auto mode <small>Send every 3 seconds</small></span>
+        <label class="toggle" aria-label="Toggle automatic readings"
+          ><input type="checkbox" id="autoToggle" /><span class="track"></span
+        ></label>
+      </div>
+    </section>
 
     <div class="foot">This phone emulates the patient's smart wristband.</div>
 
