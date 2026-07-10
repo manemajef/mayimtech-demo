@@ -1,0 +1,77 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1, maximum-scale=1"
+    />
+    <title>MAYIMTECH — Patient</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="patient">
+    <div class="topbar">
+      <div class="name">MAYIMTECH</div>
+      <div class="conn" id="conn">
+        <span class="dot"></span><span id="connText">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- Patient-facing status: the one thing that must be unmistakable -->
+    <section class="status-panel is-normal" id="statusPanel">
+      <div class="status-icon" id="statusIcon">!</div>
+      <div class="status-head" id="statusHead">You are OK</div>
+      <!-- <div class="status-sub" id="statusSub">Your readings look normal.</div> -->
+      <div class="status-sub" id="statusSub">
+        Your caregiver has been notified.
+      </div>
+      <button class="cta" id="ackBtn" hidden>I drank and feel better</button>
+    </section>
+
+    <!-- Current readings -->
+    <section class="readings">
+      <div class="reading" id="rPulse">
+        <span class="r-label">Pulse</span>
+        <span class="r-value"
+          ><span id="pulse">–</span> <span class="unit">bpm</span></span
+        >
+      </div>
+      <div class="reading" id="rTemp">
+        <span class="r-label">Temperature</span>
+        <span class="r-value"
+          ><span id="temp">–</span> <span class="unit">°C</span></span
+        >
+      </div>
+      <div class="reading" id="rMove">
+        <span class="r-label">Movement</span>
+        <span class="r-value"
+          ><span id="move">–</span> <span class="unit">%</span></span
+        >
+      </div>
+    </section>
+
+    <!-- Demo controls (for the presenter). The wristband would send these automatically. -->
+    <div class="controls-title">Demo controls</div>
+
+    <div class="auto-row">
+      <span class="a-label">Auto mode (send every 3s)</span>
+      <label class="toggle"
+        ><input type="checkbox" id="autoToggle" /><span class="track"></span
+      ></label>
+    </div>
+    <div>Force push stats (for demo)</div>
+
+    <div style="display: flex; gap: 1em">
+      <button class="btn normal" id="btnNormal">Normal</button>
+      <button class="btn high" id="btnHigh">Watch out</button>
+      <button class="btn alert" id="btnAlert">Critical</button>
+    </div>
+
+    <div class="foot">This phone emulates the patient's smart wristband.</div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="patient.js"></script>
+  </body>
+</html>

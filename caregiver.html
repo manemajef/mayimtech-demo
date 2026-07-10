@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>MAYIMTECH — Caregiver Dashboard</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body class="caregiver">
+    <div class="topbar">
+      <div>
+        <h1>MAYIMTECH</h1>
+        <div class="sub">
+          Caregiver Dashboard · real-time dehydration monitoring
+        </div>
+      </div>
+      <div class="conn" id="conn">
+        <span class="dot"></span><span id="connText">Connecting…</span>
+      </div>
+    </div>
+
+    <!-- ONE patient card. Its border reacts to status (warning = icon pulses, critical = whole card pulses) -->
+    <div class="card patient-card is-normal" id="patientCard">
+      <div class="patient-head">
+        <div class="ph-left">
+          <span class="status-icon" id="statusIcon" aria-hidden="true"></span>
+          <div>
+            <div class="p-name">Miriam Cohen</div>
+            <div class="p-id">Patient ID: MT-001 · Home care</div>
+          </div>
+        </div>
+        <div class="badge is-normal" id="badge">Waiting</div>
+      </div>
+
+      <!-- alert line (names the readings that crossed threshold) -->
+      <div class="alert-line" id="alertBanner">
+        <b class="a-title" id="alertTitle">Dehydration risk</b>
+        <span class="a-body" id="alertBody"></span>
+      </div>
+
+      <!-- shown when the patient acknowledges a warning -->
+      <div class="ack-note" id="ackNote" hidden></div>
+
+      <div class="cg-body">
+        <div class="cg-left">
+          <div class="vitals">
+            <div class="vital" id="vPulse">
+              <div class="v-label">Pulse</div>
+              <div class="v-value">
+                <span id="pulse">–</span> <span class="unit">bpm</span>
+              </div>
+            </div>
+            <div class="vital" id="vTemp">
+              <div class="v-label">Temperature</div>
+              <div class="v-value">
+                <span id="temp">–</span> <span class="unit">°C</span>
+              </div>
+            </div>
+            <div class="vital" id="vMove">
+              <div class="v-label">Movement</div>
+              <div class="v-value">
+                <span id="move">–</span> <span class="unit">%</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="meta-row">
+            <span>Last reading: <b id="lastUpdate">—</b></span>
+            <span>Alerts today: <b id="alertsCount">0</b></span>
+          </div>
+
+          <div class="section-title">Recent readings</div>
+          <div class="chart-wrap">
+            <canvas id="chart" width="560" height="200"></canvas>
+          </div>
+        </div>
+
+        <div class="cg-right">
+          <div class="section-title">Event history</div>
+          <div class="history" id="history"></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="foot-note">
+      Laptop dashboard · projected in class. Alerts appear within 5 seconds of a
+      patient reading.
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="caregiver.js"></script>
+  </body>
+</html>
