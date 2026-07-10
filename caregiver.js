@@ -438,10 +438,9 @@ function drawChart() {
     c.height = Math.round(h * dpr);
   }
   ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-  var
-    pad = 22;
+  var pad = 22;
   ctx.clearRect(0, 0, w, h);
-  ctx.strokeStyle = "#e2e7ec";
+  ctx.strokeStyle = "rgba(22, 32, 43, 0.08)";
   ctx.lineWidth = 1;
   for (var i = 0; i <= 4; i++) {
     var y = pad + ((h - pad * 2) * i) / 4;
@@ -508,13 +507,12 @@ function line(ctx, vals, min, max, color, w, h, pad) {
   var step = (w - pad * 2) / (vals.length - 1);
   ctx.strokeStyle = color;
   ctx.lineWidth = 2.5;
+  
+  // Draw line
   ctx.beginPath();
   vals.forEach(function (v, i) {
     var x = pad + i * step;
-    var y =
-      h -
-      pad -
-      ((Math.max(min, Math.min(max, v)) - min) / (max - min)) * (h - pad * 2);
+    var y = h - pad - ((Math.max(min, Math.min(max, v)) - min) / (max - min)) * (h - pad * 2);
     i ? ctx.lineTo(x, y) : ctx.moveTo(x, y);
   });
   ctx.stroke();
@@ -531,7 +529,7 @@ function legend(ctx) {
     var x = 26 + i * 112;
     ctx.fillStyle = it[1];
     ctx.fillRect(x, 6, 10, 10);
-    ctx.fillStyle = "#16202b";
+    ctx.fillStyle = "#5a6672";
     ctx.fillText(it[0], x + 15, 15);
   });
 }
