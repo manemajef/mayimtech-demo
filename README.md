@@ -10,32 +10,24 @@ Two static web apps for the final demo, synchronized in real time:
 Built with plain HTML + CSS + JavaScript and **Firebase Realtime Database (v8 compat CDN)**.
 No build step, no framework.
 
-## Run locally (no Firebase needed)
-Serve this folder over http and open the two pages in two tabs/devices:
+## The live web apps
 
-```bash
-python3 -m http.server 8000
-# patient:   http://localhost:8000/patient.html
-# caregiver: http://localhost:8000/caregiver.html
-```
-
-With the placeholder keys in `firebase-config.js`, the apps run in **local demo mode**
-(BroadcastChannel + localStorage) — the two tabs sync on the same machine.
-
-## Enable real cross-device sync (for the class)
-1. Create a free Firebase project → add a **Realtime Database** in **test mode**.
-2. Register a Web app (`</>`), copy its `firebaseConfig`.
-3. Paste the values into `firebase-config.js` (replace the `YOUR_…` placeholders).
-4. Deploy to **GitHub Pages** and use the public `patient.html` / `caregiver.html` URLs.
+- [Pateint Mobile App](https://manemajef.github.io/mayimtech-demo/patient.html)
+- [Caregiver Dashboard](https://manemajef.github.io/mayimtech-demo/caregiver.html)
+- [Web app entry point](https://manemajef.github.io/mayimtech-demo)
 
 ## Files
-| File | Purpose |
-|------|---------|
-| `patient.html` / `patient.js` | Phone app: simulate readings, force alert, auto mode |
-| `caregiver.html` / `caregiver.js` | Laptop dashboard: live vitals, trend, history, alerts + chime |
-| `styles.css` | Shared, deliberately plain styling |
-| `firebase-config.js` | Firebase keys (or local-fallback when left as placeholders) |
 
-## Risk logic (threshold comparison — no algorithm)
-A reading is **Critical** if pulse ≥ 100 bpm, temperature ≥ 37.8 °C, or movement ≤ 30 %
+| File                              | Purpose                                                       |
+| --------------------------------- | ------------------------------------------------------------- |
+| `patient.html` / `patient.js`     | Phone app: simulate readings, force alert, auto mode          |
+| `caregiver.html` / `caregiver.js` | Laptop dashboard: live vitals, trend, history, alerts + chime |
+| `styles.css`                      | Shared, deliberately plain styling                            |
+| `firebase-config.js`              | Firebase keys (or local-fallback when left as placeholders)   |
+
+## Risk logic 
+
+A reading is **Critical** if pulse $\geq$  100 bpm, temperature $\geq$ 37.8 °C, or movement $\leq$ 30 % 
 (and always when "Send alert" is pressed); **Warning** when close to those limits; otherwise **Normal**.
+
+
